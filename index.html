@@ -22,7 +22,7 @@
       align-items: center;
       text-align: center;
       background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
-        url('https://cdn.prod.website-files.com/5ebc12985f567c48a37040ab/609d094d47d277c6c6deec44_Bez-nazwy-2.jpg')
+        url('https://shift.ca/wp-content/uploads/2019/11/9.94kw-cedar.jpg')
         no-repeat center center/cover;
     }
 
@@ -157,6 +157,21 @@
       border-radius: 6px;
       font-weight: 600;
     }
+    #lang-switcher {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 999999 !important;
+  pointer-events: auto;
+}
+
+.partners img,
+.partners a,
+.partners {
+  z-index: 1 !important;
+  position: relative;
+}
+
   </style>
 </head>
 <body>
@@ -197,10 +212,13 @@
         <option value="5" selected>5 kW</option>
         <option value="8">8 kW</option>
         <option value="10">10 kW</option>
+        <option value="15">15 kW</option>
+        <option value="20">20 kW</option>
       </select>
 
       <label for="bateria">Pojemność magazynu energii (kWh):</label>
       <select id="bateria">
+        <option value="0">0 kWh (bez magazynu)</option>
         <option value="5">5 kWh</option>
         <option value="10" selected>10 kWh</option>
         <option value="15">15 kWh</option>
@@ -213,7 +231,7 @@
         <option value="1">Tak (11 kW)</option>
       </select>
 
-      <button type="button" id="btnCalc" onclick="stworzZestaw()">Oblicz zestaw</button>
+      <button type="button" id="btnCalc" onclick="stworzZestaw(true)">Oblicz zestaw</button>
 
       <div id="wynikZestawu" class="calc-result" style="display:none;"></div>
 
@@ -240,17 +258,19 @@
     </form>
   </section>
 
-  <section class="partners" id="partners">
+ <section class="partners" id="partners">
   <h2 id="partnersTitle">Nasi Partnerzy</h2>
   <p id="partnersDesc">Współpracujemy z najlepszymi w branży</p>
-    <div>
-      <img src="https://static.wixstatic.com/media/ea63a3_081313db29eb4edf95cbf97a65e21dfe~mv2.jpg/v1/fill/w_252,h_168,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/HORTO.jpg">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/8/81/Solar_power_icon.png">
-    </div>
-  </section>
+  <div>
+    <a href="https://www.hortogarage.com" target="_blank" rel="noopener">
+      <img src="https://static.wixstatic.com/media/ea63a3_081313db29eb4edf95cbf97a65e21dfe~mv2.jpg/v1/fill/w_252,h_168,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/HORTO.jpg" alt="Hortogarage">
+    </a>
+  </div>
+</section>
+
 
   <footer>
-    <p>© 2025 SunPort-JW-SOL | Kontakt: <em>(uzupełnij dane kontaktowe)</em></p>
+    <p>© 2025 SunPort-JW-SOL | Kontakt: <em>(mail: jakub.wszolek@sunport-group.com tel: +48518193455)</em></p>
   </footer>
 
 <!-- 🔥 TŁUMACZENIA + KONFIGURATOR W PEŁNI TŁUMACZONY -->
@@ -281,11 +301,20 @@ const textPL = {
   rYes:"Tak",
   rNo:"Nie",
   rCost:"💰 Szacunkowy koszt zestawu",
+  noBattery: "Brak magazynu",
 
   textareaAdd:"Dodatkowe informacje: ",
   submit:"Wyślij zapytanie",
   namePH:"Twoje imię i nazwisko",
-  emailPH:"Twój e-mail"
+  emailPH:"Twój e-mail",
+  
+  partnersTitle: "Nasi Partnerzy",
+  partnersDesc: "Współpracujemy z najlepszymi w branży",
+
+  popupTitle: "Otrzymaj ofertę specjalną!",
+  popupDesc: "Wyślij nam swój zestaw i otrzymaj indywidualną ofertę cenową.",
+  popupBtn: "Przejdź do formularza",
+
 
 };
 
@@ -314,11 +343,20 @@ const textDE = {
   rYes:"Ja",
   rNo:"Nein",
   rCost:"💰 Geschätzte Setkosten",
+  noBattery: "Keine Batterie",
 
   textareaAdd:"Weitere Informationen: ",
   submit:"Anfrage senden",
   namePH:"Ihr Name",
-  emailPH:"Ihre E-Mail"
+  emailPH:"Ihre E-Mail",
+
+  partnersTitle: "Unsere Partner",
+  partnersDesc: "Wir arbeiten mit den Besten der Branche zusammen",
+
+  popupTitle: "Erhalten Sie ein spezielles Angebot!",
+  popupDesc: "Senden Sie uns Ihr Set und erhalten Sie ein individuelles Preisangebot.",
+  popupBtn: "Zum Formular",
+
 
 };
 
@@ -347,11 +385,20 @@ const textEN = {
   rYes:"Yes",
   rNo:"No",
   rCost:"💰 Estimated set cost",
+  noBattery: "No battery",
 
   textareaAdd:"Additional information: ",
   submit:"Send request",
   namePH:"Your full name",
-  emailPH:"Your email"
+  emailPH:"Your email",
+
+  partnersTitle: "Our Partners",
+  partnersDesc: "We cooperate with the best in the industry",
+
+  popupTitle: "Get a Special Offer!",
+  popupDesc: "Send us your set and receive an individual price offer.",
+  popupBtn: "Go to Form",
+
 
 };
 
@@ -384,6 +431,14 @@ function setLang(lang){
   document.querySelector("#btnCalc").textContent=t.calcBtn;
   document.querySelector("#zamowZestaw").textContent=t.orderBtn;
 
+  const popup = document.getElementById("contactPopup");
+  if(popup) {
+    popup.querySelector("h3").textContent = t.popupTitle || "Otrzymaj ofertę specjalną!";
+    popup.querySelector("p").textContent = t.popupDesc || "Wyślij nam swój zestaw i otrzymaj indywidualną ofertę cenową.";
+    popup.querySelector("#popupBtn").textContent = t.popupBtn || "Przejdź do formularza";
+  }
+
+
   document.querySelector("#wiadomosc").placeholder=t.textareaAdd;
   document.querySelector("#submitBtn").textContent=t.submit;
   document.querySelector("#nameField").placeholder=t.namePH;
@@ -391,32 +446,40 @@ function setLang(lang){
 
   document.getElementById("btnOffer").textContent = t.btnOfferText;
 
+  document.getElementById("partnersTitle").textContent = t.partnersTitle;
+  document.getElementById("partnersDesc").textContent = t.partnersDesc;
+  
+  const bateriaSelect = document.getElementById("bateria");
+bateriaSelect.options[0].textContent = t.noBattery;
+
+
+
+
 }
 
 
-function stworzZestaw(){
+function stworzZestaw(showPopup = false){
   const pv = parseFloat(document.getElementById("pv").value);
   const bat = parseFloat(document.getElementById("bateria").value);
   const lad = parseInt(document.getElementById("ladowarka").value);
 
   const t = currentLang === "de" ? textDE : (currentLang === "en" ? textEN : textPL);
 
-  // --- WALUTA WG JĘZYKA ---
   const waluta = currentLang === "pl" ? "zł" : "€";
 
-  // CENNIK (NIE ZMIENIAMY, TYLKO WALUTA SIĘ PODMIEŃ)
-  const cenaPV = currentLang === "pl" ? 5200 : 1200; // przykład: inne ceny w PLN
-  const cenaBat = currentLang === "pl" ? 2300 : 500;
-  const cenaLad = currentLang === "pl" ? 4200 : 1000;
+  // Cena za 1 kW / 1 kWh
+  const cenaPVperKW = currentLang === "pl" ? 2750 : 1500; // np 1040 zł za 1kW
+  const cenaBat = currentLang === "pl" ? 900 : 550;       // np 230 zł za 1 kWh
+  const cenaLad = currentLang === "pl" ? 4000 : 1000;    // ładowarka stała
 
-  const kosztPV = pv * cenaPV;
+  const kosztPV = pv * cenaPVperKW;
   const kosztBat = bat * cenaBat;
   const kosztLad = lad ? cenaLad : 0;
   const koszt = kosztPV + kosztBat + kosztLad;
 
   const opis =
 `${t.rPV}: ${pv} kW (${kosztPV.toLocaleString()} ${waluta})
-${t.rBAT}: ${bat} kWh (${kosztBat.toLocaleString()} ${waluta})
+${t.rBAT}: ${bat > 0 ? bat + " kWh ("+kosztBat.toLocaleString()+" "+waluta+")" : t.noBattery}
 ${t.rEV}: ${lad ? t.rYes+" ("+cenaLad.toLocaleString()+" "+waluta+")" : t.rNo}
 ${t.rCost}: ${koszt.toLocaleString()} ${waluta}`;
 
@@ -426,8 +489,48 @@ ${t.rCost}: ${koszt.toLocaleString()} ${waluta}`;
   wynik.dataset.opis = opis;
 
   document.getElementById("zamowZestaw").style.display = "inline-block";
+   if (showPopup) {
+    pokazPopup();
+  }
 }
+  function pokazPopup() {
+  const popup = document.getElementById("contactPopup");
+  popup.style.display = "block";
 
+  // Przycisk do formularza
+  document.getElementById("popupBtn").onclick = function() {
+    window.location.hash = "#zamow"; // przenosi do sekcji zamów
+    popup.style.display = "none";
+    document.getElementById("wiadomosc").focus();
+  }
+    // Nasłuchiwanie zmian w polach formularza
+document.addEventListener("DOMContentLoaded", () => {
+  const fields = ["pv", "bateria", "ladowarka"];
+  
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener("change", () => {
+      stworzZestaw(false); // false = nie pokazuj popup przy automatycznym przeliczaniu
+    });
+  });
+});
+
+
+  // Przycisk zamknięcia
+  document.getElementById("popupClose").onclick = function() {
+    popup.style.display = "none";
+    }
+ }
+// --- AUTOMATYCZNE PRZELICZANIE ---
+document.addEventListener("DOMContentLoaded", () => {
+  const pvSelect = document.getElementById("pv");
+  const batSelect = document.getElementById("bateria");
+  const ladSelect = document.getElementById("ladowarka");
+
+  [pvSelect, batSelect, ladSelect].forEach(el => {
+    el.addEventListener("change", stworzZestaw(false)); 
+  });
+});
 
 
 function przeniesDoForm(){
@@ -449,9 +552,32 @@ function przeniesDoForm(){
 </div>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    setLang('pl'); // domyślny język po załadowaniu strony
+    // Domyślny język
+    let defaultLang = 'en';
+
+    // Pobranie języka przeglądarki, np. "de-DE" lub "pl-PL"
+    const userLang = (navigator.language || navigator.userLanguage).toLowerCase();
+
+    // Ustalanie języka na podstawie kraju/języka przeglądarki
+    if(userLang.startsWith('de')) {
+        defaultLang = 'de'; // Niemcy, Austria, Szwajcaria i inne niemieckojęzyczne
+    } else if(userLang.startsWith('pl')) {
+        defaultLang = 'pl'; // Polska
+    } else {
+        defaultLang = 'en'; // Pozostałe
+    }
+
+    setLang(defaultLang); // Ustawienie języka automatycznie
 });
+
 </script>
+  <div id="contactPopup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+     background:white; padding:30px; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.3); z-index:9999; max-width:400px; text-align:center;">
+  <h3>Otrzymaj ofertę specjalną!</h3>
+  <p>Wyślij nam swój zestaw i otrzymaj indywidualną ofertę cenową.</p>
+  <button id="popupBtn" style="padding:10px 20px; margin-top:15px; cursor:pointer;">Przejdź do formularza</button>
+  <span id="popupClose" style="position:absolute; top:5px; right:10px; cursor:pointer; font-weight:bold;">✖</span>
+</div>
 
 </body>
 </html>
